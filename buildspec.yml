@@ -1,0 +1,59 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "ap-southeast-1"
+    EKS_CLUSTER: "my-eks"
+    ECR_REPO: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/netflix-app"
+    SONAR_HOST_URL: "https://your-sonarqube.example.com"
+    SONAR_PROJECT_KEY: "netflix-app"
+  secrets-manager:
+    SONAR_TOKEN: "sonarqube/token"
+
+phases:
+  install:
+    commands:
+      - echo "Installing tools..."
+      - yum install -y jq
+      - curl -sLO https://github.com/aquasecurity/trivy/releases/latest/download/trivy_Linux-64bit.tar.gz
+      - tar zxvf trivy_Linux-64bit.tar.gz -C /usr/local/bin/ trivy
+      - curl -sL https://github.com/SonarSource/sonar-scanner-cli/releases/latest/download/sonar-scanner-cli-linux.zip -o scanner.zip
+      - unzip scanner.zip -d /opt/
+      - export PATH=$PATH:/opt/sonar-scanner-*/bin
+      - pip install awscli
+
+  pre_build:
+    commands:
+      - echo Logging into ECR...
+      - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPO
+      - echo Logging build metadata...
+      - TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION}
+
+  build:
+    commands:
+      - echo "Running SonarQube scan..."
+      - sonar-scanner \
+          -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=$SONAR_HOST_URL \
+          -Dsonar.login=$SONAR_TOKEN
+
+      - echo "Building Docker image..."
+      - docker build -t netflix-app:$TAG .
+
+      - echo "Scanning image with Trivy..."
+      - trivy image --severity HIGH,CRITICAL --exit-code 1 netflix-app:$TAG
+
+  post_build:
+    commands:
+      - docker tag netflix-app:$TAG ${ECR_REPO}:$TAG
+      - docker push ${ECR_REPO}:$TAG
+
+      - echo "Deploying to EKS..."
+      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+      - kubectl set image deployment/netflix-app netflix-container=${ECR_REPO}:$TAG
+      - kubectl rollout status deployment/netflix-app
+
+artifacts:
+  files:
+    - '**/*'
