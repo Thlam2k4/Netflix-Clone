@@ -5,55 +5,63 @@ env:
     AWS_REGION: "ap-southeast-1"
     EKS_CLUSTER: "my-eks"
     ECR_REPO: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/netflix-app"
-    SONAR_HOST_URL: "https://your-sonarqube.example.com"
+    # SonarQube server của bạn
+    SONAR_HOST_URL: "http://34.232.189.92:9000"
     SONAR_PROJECT_KEY: "netflix-app"
-  # secrets-manager:
-  #   SONAR_TOKEN: "sonarqube/token"
+    # Trivy server của bạn
+    TRIVY_SERVER: "http://34.232.189.92:4954"
 
 phases:
   install:
     commands:
-      - echo "Installing tools..."
-      - yum install -y jq
-      - curl -sLO https://github.com/aquasecurity/trivy/releases/latest/download/trivy_Linux-64bit.tar.gz
-      - tar zxvf trivy_Linux-64bit.tar.gz -C /usr/local/bin/ trivy
+      - echo "🔧 Installing tools..."
+      - yum install -y jq unzip
+      # Install sonar-scanner
       - curl -sL https://github.com/SonarSource/sonar-scanner-cli/releases/latest/download/sonar-scanner-cli-linux.zip -o scanner.zip
       - unzip scanner.zip -d /opt/
       - export PATH=$PATH:/opt/sonar-scanner-*/bin
-      - pip install awscli
+      # Install Trivy client
+      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      # IaC security: tfsec & checkov
+      - pip install --quiet checkov
+      - pip install --quiet tfsec
 
   pre_build:
     commands:
-      - echo Logging into ECR...
-      - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPO
-      - echo Logging build metadata...
+      - echo "🔐 Logging into ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
       - TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION}
+      - echo "Using TAG = $TAG"
 
   build:
     commands:
-      - echo "Running SonarQube scan..."
-      # - sonar-scanner \
-      #     -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-      #     -Dsonar.sources=. \
-      #     -Dsonar.host.url=$SONAR_HOST_URL \
-      #     -Dsonar.login=$SONAR_TOKEN
+      - echo "🔍 Running SonarQube scan..."
+      - sonar-scanner \
+          -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=$SONAR_HOST_URL \
+          -Dsonar.login=$SONAR_TOKEN
 
-      - echo "Building Docker image..."
+      - echo "🐳 Building Docker image..."
       - docker build -t netflix-app:$TAG .
 
-      - echo "Scanning image with Trivy..."
-      # - trivy image --severity HIGH,CRITICAL --exit-code 1 netflix-app:$TAG
+      - echo "🔎 Scanning image via Trivy Server ($TRIVY_SERVER)"
+      - trivy client --remote $TRIVY_SERVER --exit-code 1 --severity HIGH,CRITICAL --debug netflix-app:$TAG
 
+      - echo "🛡 Running IaC Security Scans..."
+      - tfsec ./ || true
+      - checkov -d ./ || true
   post_build:
     commands:
+      - echo "📤 Pushing image to ECR..."
       - docker tag netflix-app:$TAG ${ECR_REPO}:$TAG
       - docker push ${ECR_REPO}:$TAG
 
-      - echo "Deploying to EKS..."
+      - echo "🚀 Deploying to EKS cluster..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+
       - kubectl set image deployment/netflix-app netflix-container=${ECR_REPO}:$TAG
       - kubectl rollout status deployment/netflix-app
-
 artifacts:
   files:
     - '**/*'
