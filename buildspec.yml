@@ -10,18 +10,27 @@ env:
     SONAR_PROJECT_KEY: "netflix-app"
     # Trivy server của bạn
     TRIVY_SERVER: "http://34.232.189.92:4954"
+    # Đặt phiên bản Sonar Scanner cụ thể để tránh lỗi tải về/unzip
+    SONAR_SCANNER_VERSION: "5.0.1.3000" # <-- Sửa đổi quan trọng
+    # Cần thiết cho SonarQube nếu không phải Public
+    # SONAR_TOKEN: "your_sonar_token"
 
 phases:
   install:
     commands:
       - echo "🔧 Installing tools..."
-      - yum install -y jq unzip
-      # Install sonar-scanner
-      - curl -sL https://github.com/SonarSource/sonar-scanner-cli/releases/latest/download/sonar-scanner-cli-linux.zip -o scanner.zip
-      - unzip scanner.zip -d /opt/
-      - export PATH=$PATH:/opt/sonar-scanner-*/bin
+      - **yum install -y jq unzip** # Đảm bảo đã cài
+      
+      # Install sonar-scanner - SỬA LỖI UNZIP BẰNG CÁCH DÙNG VERSION CỤ THỂ
+      - echo "Installing Sonar Scanner version ${SONAR_SCANNER_VERSION}..."
+      - **curl -sL https://github.com/SonarSource/sonar-scanner-cli/releases/download/${SONAR_SCANNER_VERSION}/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip -o scanner.zip**
+      - **unzip scanner.zip -d /opt/**
+      - **mv /opt/sonar-scanner-${SONAR_SCANNER_VERSION}-linux /opt/sonar-scanner** # Đổi tên cho dễ quản lý
+      - **export PATH=$PATH:/opt/sonar-scanner/bin** # Sửa đường dẫn PATH
+      
       # Install Trivy client
       - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      
       # IaC security: tfsec & checkov
       - pip install --quiet checkov
       - pip install --quiet tfsec
@@ -36,21 +45,24 @@ phases:
   build:
     commands:
       - echo "🔍 Running SonarQube scan..."
+      # Bỏ comment và điền SONAR_TOKEN nếu bạn muốn chạy Sonar Scan
       # - sonar-scanner \
-      #     -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-      #     -Dsonar.sources=. \
-      #     -Dsonar.host.url=$SONAR_HOST_URL \
-      #     -Dsonar.login=$SONAR_TOKEN
-
+      #    -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+      #    -Dsonar.sources=. \
+      #    -Dsonar.host.url=$SONAR_HOST_URL \
+      #    -Dsonar.login=$SONAR_TOKEN
+      
       - echo "🐳 Building Docker image..."
       - docker build -t netflix-app:$TAG .
 
       - echo "🔎 Scanning image via Trivy Server ($TRIVY_SERVER)"
+      # Bỏ comment để chạy Trivy
       # - trivy client --remote $TRIVY_SERVER --exit-code 1 --severity HIGH,CRITICAL --debug netflix-app:$TAG
 
       - echo "🛡 Running IaC Security Scans..."
       - tfsec ./ || true
       - checkov -d ./ || true
+      
   post_build:
     commands:
       - echo "📤 Pushing image to ECR..."
@@ -58,10 +70,11 @@ phases:
       - docker push ${ECR_REPO}:$TAG
 
       - echo "🚀 Deploying to EKS cluster..."
-      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+      - **aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER**
 
-      - kubectl set image deployment/netflix-app netflix-container=${ECR_REPO}:$TAG
-      - kubectl rollout status deployment/netflix-app
+      # Sửa tên deployment và container name cho đúng (giả định tên deployment là netflix-app)
+      - **kubectl set image deployment/netflix-app netflix-container=${ECR_REPO}:$TAG**
+      - **kubectl rollout status deployment/netflix-app**
 artifacts:
   files:
     - '**/*'
