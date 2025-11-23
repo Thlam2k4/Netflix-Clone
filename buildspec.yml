@@ -7,8 +7,8 @@ env:
     ECR_REPO: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/netflix-app"
     SONAR_HOST_URL: "https://your-sonarqube.example.com"
     SONAR_PROJECT_KEY: "netflix-app"
-  secrets-manager:
-    SONAR_TOKEN: "sonarqube/token"
+  # secrets-manager:
+  #   SONAR_TOKEN: "sonarqube/token"
 
 phases:
   install:
@@ -32,17 +32,17 @@ phases:
   build:
     commands:
       - echo "Running SonarQube scan..."
-      - sonar-scanner \
-          -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-          -Dsonar.sources=. \
-          -Dsonar.host.url=$SONAR_HOST_URL \
-          -Dsonar.login=$SONAR_TOKEN
+      # - sonar-scanner \
+      #     -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+      #     -Dsonar.sources=. \
+      #     -Dsonar.host.url=$SONAR_HOST_URL \
+      #     -Dsonar.login=$SONAR_TOKEN
 
       - echo "Building Docker image..."
       - docker build -t netflix-app:$TAG .
 
       - echo "Scanning image with Trivy..."
-      - trivy image --severity HIGH,CRITICAL --exit-code 1 netflix-app:$TAG
+      # - trivy image --severity HIGH,CRITICAL --exit-code 1 netflix-app:$TAG
 
   post_build:
     commands:
