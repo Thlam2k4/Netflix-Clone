@@ -45,4 +45,25 @@ spec:
             cpu: "500m"
           requests:
             memory: "256Mi"
-            cpu: "200m"
+            cpu: "200m"-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netflix-app-service
+  labels:
+    app: netflix-app
+spec:
+  # Loại LoadBalancer sẽ tự động tạo một AWS Load Balancer (NLB/ALB)
+  # Endpoint DNS của LB này sẽ là Primary Endpoint cho Route 53 Failover.
+  type: LoadBalancer 
+  
+  # Selector phải khớp với 'labels' trong Deployment (app: netflix-app)
+  selector:
+    app: netflix-app 
+  ports:
+    # Cổng mà AWS Load Balancer (LB) lắng nghe từ người dùng (Internet)
+    - protocol: TCP
+      port: 80 
+      # Cổng mà Container (Pod) của bạn đang lắng nghe (đã định nghĩa là 8080 trong Deployment)
+      targetPort: 80
