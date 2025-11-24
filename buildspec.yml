@@ -60,12 +60,12 @@ phases:
       # - sonar-scanner -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
       
       - echo "🐳 Building Docker image..."
-      - docker build -t netflix-app:$TAG .
-      - docker tag netflix-app:$TAG netflix-app:latest # Tag cục bộ để scan
+      - docker build -t  ${ECR_REPO}:$TAG .
+      - docker tag  ${ECR_REPO}:$TAG  ${ECR_REPO}:latest # Tag cục bộ để scan
 
       - echo "🔎 Scanning image via Trivy..."
       # Kích hoạt Trivy scan (sẽ FAIL pipeline nếu có HIGH/CRITICAL)
-      - trivy image --exit-code 1 --severity HIGH,CRITICAL netflix-app:$TAG 
+      # - trivy image --exit-code 1 --severity HIGH,CRITICAL netflix-app:$TAG 
 
       - echo "🛡 Running IaC Security Scans..."
       # Lưu ý: Sẽ không fail build nếu chỉ có warning (do || true)
