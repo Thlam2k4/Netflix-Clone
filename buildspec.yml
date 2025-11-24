@@ -119,6 +119,9 @@ phases:
       # 3. DEPLOY TO EKS (PRIMARY)
       - echo "🚀 Deploying to EKS cluster (AWS Primary)..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+      - aws sts get-caller-identity
+      - kubectl config view
+      - kubectl get nodes
       - kubectl set image deployment/netflix-app-deployment netflix-container=${ECR_REPO}:$TAG -n $K8S_NAMESPACE
       - kubectl rollout status deployment/netflix-app-deployment -n $K8S_NAMESPACE
 
