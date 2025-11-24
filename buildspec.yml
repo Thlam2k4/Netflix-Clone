@@ -112,8 +112,8 @@ phases:
         if [ -n "$GCP_SA_KEY_ARN" ]; then
           echo "Mirroring image to GCP Artifact Registry..."
           # Đẩy image lên Artifact Registry
-          docker tag ${ECR_REPO}:$TAG ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-clone:$TAG
-          docker push ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-clone:$TAG
+          docker tag ${ECR_REPO}:$TAG ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-clone/netflix-clone:$TAG
+          docker push ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-clone/netflix-clone:$TAG
         fi
       
       # 3. DEPLOY TO EKS (PRIMARY)
@@ -130,7 +130,7 @@ phases:
           gcloud container clusters get-credentials $GKE_CLUSTER --region $GCP_REGION --project $GCP_PROJECT
           
           # Triển khai (Sử dụng Image từ GCP Artifact Registry)
-          kubectl set image deployment/netflix-app-deployment netflix-container=${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-clone:$TAG -n $K8S_NAMESPACE
+          kubectl set image deployment/netflix-app-deployment netflix-container=${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-clone/netflix-clone:$TAG -n $K8S_NAMESPACE
           kubectl rollout status deployment/netflix-app-deployment -n $K8S_NAMESPACE
         fi
       
