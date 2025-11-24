@@ -72,7 +72,9 @@ phases:
       # 3. XÁC THỰC VÀ ĐĂNG NHẬP DOCKER VỚI GCP ARTIFACT REGISTRY
       - |
         if [ -n "$GCP_SA_KEY_ARN" ]; then
-          aws secretsmanager get-secret-value --secret-id "$GCP_SA_KEY_ARN" --query SecretString --output text > /tmp/gcpkey.json \
+          echo "Fetching and extracting GCP service account key..."
+          aws secretsmanager get-secret-value --secret-id "$GCP_SA_KEY_ARN" --query SecretString --output text \
+            | jq -r '.gcp_sa_key' > /tmp/gcpkey.json \
           && gcloud auth activate-service-account --key-file=/tmp/gcpkey.json \
           && gcloud auth configure-docker $GCP_ARTIFACT_HOST --quiet;
         else
