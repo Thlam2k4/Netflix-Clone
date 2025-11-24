@@ -12,7 +12,7 @@ env:
     
     # CÁC BIẾN CẦN THIẾT CHO GCP (Phải được thiết lập trong CodeBuild UI)
     GCP_REGION: "us-central1"
-    GCP_ARTIFACT_HOST: "us-central1-docker.pkg.dev" # Cần khớp với Artifact Registry
+    GCP_ARTIFACT_HOST: "us-east1-docker.pkg.dev" # Cần khớp với Artifact Registry
     GKE_CLUSTER: "netflix-app-gke"
     K8S_NAMESPACE: "default"
     # GCP_PROJECT (PLAIN TEXT)
@@ -45,12 +45,27 @@ phases:
       - TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - echo "Using TAG = $TAG"
 
+      - |
+        if [ -n "$DOCKER_CREDS_ARN" ]; then
+          echo "🐳 Logging into Docker Hub to bypass pull rate limit..."
+          # Lấy chuỗi JSON chứa username và password từ Secret
+          DOCKER_CREDS=$(aws secretsmanager get-secret-value --secret-id ${DOCKER_CREDS_ARN} --query SecretString --output text)
+          DOCKER_USER=$(echo $DOCKER_CREDS | jq -r '.username')
+          DOCKER_PASS=$(echo $DOCKER_CREDS | jq -r '.password')
+          echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
+        fi
       # 2. XÁC THỰC VÀ ĐĂNG NHẬP DOCKER VỚI GCP ARTIFACT REGISTRY (CHO MIRRORING)
       - |
-        if [ -n "$GCP_SA_KEY_JSON" ]; then
+        if [ -n "$GCP_SA_KEY_ARN" ]; then
           echo "Activating GCP Service Account and configuring Docker for Artifact Registry..."
-          printf '%s' "$GCP_SA_KEY_JSON" > /tmp/gcpkey.json
+          # Lấy chuỗi JSON Key từ Secrets Manager
+          GCP_SA_KEY_JSON=$(aws secretsmanager get-secret-value --secret-id ${GCP_SA_KEY_ARN} --query SecretString --output text)
+          
+          # Lưu chuỗi JSON Key vào file tạm
+          printf '%s' "$GCP_SA_KEY_JSON" > /tmp/gcpkey.json 
+          # Kích hoạt Service Account
           gcloud auth activate-service-account --key-file=/tmp/gcpkey.json
+          # Cấu hình Docker để sử dụng Artifact Registry
           gcloud auth configure-docker $GCP_ARTIFACT_HOST --quiet
         fi
 
@@ -81,8 +96,9 @@ phases:
 
       # 2. MIRROR TO GCP ARTIFACT REGISTRY (STANDBY)
       - |
-        if [ -n "$GCP_SA_KEY_JSON" ]; then
+        if [ -n "$GCP_SA_KEY_ARN" ]; then
           echo "Mirroring image to GCP Artifact Registry..."
+          # Đẩy image lên Artifact Registry
           docker tag ${ECR_REPO}:$TAG ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
           docker push ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
         fi
@@ -94,11 +110,14 @@ phases:
       - kubectl rollout status deployment/netflix-app -n $K8S_NAMESPACE
 
       # 4. DEPLOY TO GKE (HOT STANDBY)
-      - |
-        if [ -n "$GCP_SA_KEY_JSON" ]; then
+     - |
+        if [ -n "$GCP_SA_KEY_ARN" ]; then
           echo "Deploying to GKE cluster (GCP Hot Standby)..."
+          # Lấy thông tin xác thực cho kubectl
           gcloud container clusters get-credentials $GKE_CLUSTER --region $GCP_REGION --project $GCP_PROJECT
-          kubectl set image deployment/netflix-app netflix-app=${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
+          
+          # Triển khai (Sử dụng Image từ GCP Artifact Registry)
+          kubectl set image deployment/netflix-app netflix-app=${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG} -n $K8S_NAMESPACE
           kubectl rollout status deployment/netflix-app -n $K8S_NAMESPACE
         fi
       
