@@ -14,6 +14,7 @@ env:
     GCP_ARTIFACT_HOST: "us-east1-docker.pkg.dev"
     GKE_CLUSTER: "netflix-app-gke"
     K8S_NAMESPACE: "default"
+    GCP_PROJECT: "netflix-clone"
     # Cần set GCP_PROJECT (PLAIN TEXT)
     # Cần set DOCKER_CREDS_ARN & GCP_SA_KEY_ARN (SECRETS MANAGER)
 
