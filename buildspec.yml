@@ -88,7 +88,7 @@ phases:
       # - sonar-scanner -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
       
       - echo "🐳 Building Docker image..."
-      - docker build -t ${ECR_REPO}:$TAG . # Đã sửa lỗi tag image
+      - docker build --platform linux/amd64 -t ${ECR_REPO}:$TAG . # Đã sửa lỗi tag image
       - docker tag ${ECR_REPO}:$TAG ${ECR_REPO}:latest # Tag cục bộ để scan
 
       - echo "🔎 Scanning image via Trivy..."
