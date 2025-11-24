@@ -46,12 +46,13 @@ phases:
       - echo "Using TAG = $TAG"
 
       # 2. XÁC THỰC VÀ ĐĂNG NHẬP DOCKER VỚI GCP ARTIFACT REGISTRY (CHO MIRRORING)
-      - if [ -n "$GCP_SA_KEY_JSON" ]; then
-      - echo "Activating GCP Service Account and configuring Docker for Artifact Registry..."
-      - printf '%s' "$GCP_SA_KEY_JSON" > /tmp/gcpkey.json
-      - gcloud auth activate-service-account --key-file=/tmp/gcpkey.json
-      - gcloud auth configure-docker $GCP_ARTIFACT_HOST --quiet
-      - fi
+      - |
+        if [ -n "$GCP_SA_KEY_JSON" ]; then
+          echo "Activating GCP Service Account and configuring Docker for Artifact Registry..."
+          printf '%s' "$GCP_SA_KEY_JSON" > /tmp/gcpkey.json
+          gcloud auth activate-service-account --key-file=/tmp/gcpkey.json
+          gcloud auth configure-docker $GCP_ARTIFACT_HOST --quiet
+        fi
 
   build:
     commands:
@@ -80,11 +81,12 @@ phases:
       - docker push ${ECR_REPO}:latest # Đảm bảo tag latest luôn cập nhật
 
       # 2. MIRROR TO GCP ARTIFACT REGISTRY (STANDBY)
-      - if [ -n "$GCP_SA_KEY_JSON" ]; then
-      - echo "Mirroring image to GCP Artifact Registry..."
-      - docker tag ${ECR_REPO}:$TAG ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
-      - docker push ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
-      - fi
+      - |
+        if [ -n "$GCP_SA_KEY_JSON" ]; then
+          echo "Mirroring image to GCP Artifact Registry..."
+          docker tag ${ECR_REPO}:$TAG ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
+          docker push ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
+        fi
       
       # 3. DEPLOY TO EKS (PRIMARY)
       - echo "🚀 Deploying to EKS cluster (AWS Primary)..."
@@ -93,12 +95,13 @@ phases:
       - kubectl rollout status deployment/netflix-app -n $K8S_NAMESPACE
 
       # 4. DEPLOY TO GKE (HOT STANDBY)
-      - if [ -n "$GCP_SA_KEY_JSON" ]; then
-      - echo "Deploying to GKE cluster (GCP Hot Standby)..."
-      - gcloud container clusters get-credentials $GKE_CLUSTER --region $GCP_REGION --project $GCP_PROJECT
-      - kubectl set image deployment/netflix-app netflix-app=${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
-      - kubectl rollout status deployment/netflix-app -n $K8S_NAMESPACE
-      - fi
+      - |
+        if [ -n "$GCP_SA_KEY_JSON" ]; then
+          echo "Deploying to GKE cluster (GCP Hot Standby)..."
+          gcloud container clusters get-credentials $GKE_CLUSTER --region $GCP_REGION --project $GCP_PROJECT
+          kubectl set image deployment/netflix-app netflix-app=${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
+          kubectl rollout status deployment/netflix-app -n $K8S_NAMESPACE
+        fi
       
 artifacts:
   files:
