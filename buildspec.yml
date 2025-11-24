@@ -1,5 +1,4 @@
 version: 0.2
-
 env:
   variables:
     AWS_REGION: "us-east-1"
@@ -8,8 +7,8 @@ env:
     SONAR_HOST_URL: "http://34.232.189.92:9000"
     SONAR_PROJECT_KEY: "netflix-app"
     TRIVY_SERVER: "http://34.232.189.92:4954"
-    # SỬA LỖI UNZIP: Dùng phiên bản cụ thể (ví dụ 5.0.1.3000)
-    SONAR_SCANNER_VERSION: "5.0.1.3000" 
+    # SỬA LỖI UNZIP: Dùng phiên bản cụ thể
+    SONAR_SCANNER_VERSION: "5.0.1.3000"
     
     # CÁC BIẾN CẦN THIẾT CHO GCP (Phải được thiết lập trong CodeBuild UI)
     GCP_REGION: "us-central1"
@@ -23,7 +22,7 @@ phases:
   install:
     commands:
       - echo "🔧 Installing tools and dependencies..."
-      - [cite_start]yum install -y jq unzip # [cite: 113]
+      - yum install -y jq unzip
       
       # FIX LỖI UNZIP: Tải và cấu hình sonar-scanner bằng version cụ thể
       - echo "Installing Sonar Scanner version ${SONAR_SCANNER_VERSION}..."
@@ -33,20 +32,20 @@ phases:
       - export PATH=$PATH:/opt/sonar-scanner/bin
       
       # Install Trivy client
-      - [cite_start]curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin # [cite: 115, 116, 117]
+      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
       
       # IaC security: tfsec & checkov
-      - [cite_start]pip install --quiet checkov tfsec # [cite: 118]
+      - pip install --quiet checkov tfsec
 
   pre_build:
     commands:
-      # 1. Login ECR [cite: 121, 122, 123]
+      # 1. Login ECR
       - echo "🔐 Logging into ECR..."
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
       - TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - echo "Using TAG = $TAG"
 
-      # 2. XÁC THỰC VÀ ĐĂNG NHẬP DOCKER VỚI GCP ARTIFACT REGISTRY (CHO MIRRORING) [cite: 126, 128, 129, 130]
+      # 2. XÁC THỰC VÀ ĐĂNG NHẬP DOCKER VỚI GCP ARTIFACT REGISTRY (CHO MIRRORING)
       - if [ -n "$GCP_SA_KEY_JSON" ]; then
       - echo "Activating GCP Service Account and configuring Docker for Artifact Registry..."
       - printf '%s' "$GCP_SA_KEY_JSON" > /tmp/gcpkey.json
@@ -57,43 +56,43 @@ phases:
   build:
     commands:
       - echo "🔍 Running SonarQube scan..."
-      # Kích hoạt Sonar Scanner nếu cần
       # - sonar-scanner -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
       
       - echo "🐳 Building Docker image..."
       - docker build -t netflix-app:$TAG .
-      - [cite_start]docker tag netflix-app:$TAG netflix-app:latest # Tag cục bộ để scan [cite: 134]
+      - docker tag netflix-app:$TAG netflix-app:latest # Tag cục bộ để scan
 
       - echo "🔎 Scanning image via Trivy..."
-      # Kích hoạt Trivy scan (sẽ FAIL pipeline nếu có HIGH/CRITICAL) [cite: 136, 163]
+      # Kích hoạt Trivy scan (sẽ FAIL pipeline nếu có HIGH/CRITICAL)
       - trivy image --exit-code 1 --severity HIGH,CRITICAL netflix-app:$TAG 
 
       - echo "🛡 Running IaC Security Scans..."
-      # - [cite_start]tfsec ./ || true # [cite: 181]
-      # - [cite_start]checkov -d ./ || true # [cite: 181]
+      # Lưu ý: Sẽ không fail build nếu chỉ có warning (do || true)
+      - tfsec ./ || true 
+      - checkov -d ./ || true
       
   post_build:
     commands:
-      # 1. PUSH TO ECR (PRIMARY) [cite: 139, 140]
+      # 1. PUSH TO ECR (PRIMARY)
       - echo "📤 Pushing image to ECR..."
       - docker tag netflix-app:$TAG ${ECR_REPO}:$TAG
       - docker push ${ECR_REPO}:$TAG
       - docker push ${ECR_REPO}:latest # Đảm bảo tag latest luôn cập nhật
 
-      # 2. MIRROR TO GCP ARTIFACT REGISTRY (STANDBY) [cite: 141, 142, 144]
+      # 2. MIRROR TO GCP ARTIFACT REGISTRY (STANDBY)
       - if [ -n "$GCP_SA_KEY_JSON" ]; then
       - echo "Mirroring image to GCP Artifact Registry..."
       - docker tag ${ECR_REPO}:$TAG ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
       - docker push ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
       - fi
       
-      # 3. DEPLOY TO EKS (PRIMARY) [cite: 145, 147]
+      # 3. DEPLOY TO EKS (PRIMARY)
       - echo "🚀 Deploying to EKS cluster (AWS Primary)..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
       - kubectl set image deployment/netflix-app netflix-container=${ECR_REPO}:$TAG 
       - kubectl rollout status deployment/netflix-app -n $K8S_NAMESPACE
 
-      # 4. DEPLOY TO GKE (HOT STANDBY) [cite: 151, 153, 154, 155, 156, 157]
+      # 4. DEPLOY TO GKE (HOT STANDBY)
       - if [ -n "$GCP_SA_KEY_JSON" ]; then
       - echo "Deploying to GKE cluster (GCP Hot Standby)..."
       - gcloud container clusters get-credentials $GKE_CLUSTER --region $GCP_REGION --project $GCP_PROJECT
