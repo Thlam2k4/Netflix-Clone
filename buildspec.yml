@@ -14,7 +14,7 @@ env:
     GCP_ARTIFACT_HOST: "us-east1-docker.pkg.dev"
     GKE_CLUSTER: "netflix-app-gke"
     K8S_NAMESPACE: "default"
-    GCP_PROJECT: "netflix-clone"
+    GCP_PROJECT: "calm-cairn-455503-d0"
     # Cần set GCP_PROJECT (PLAIN TEXT)
     # Cần set DOCKER_CREDS_ARN & GCP_SA_KEY_ARN (SECRETS MANAGER)
 
@@ -112,8 +112,8 @@ phases:
         if [ -n "$GCP_SA_KEY_ARN" ]; then
           echo "Mirroring image to GCP Artifact Registry..."
           # Đẩy image lên Artifact Registry
-          docker tag ${ECR_REPO}:$TAG ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
-          docker push ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-app:${TAG}
+          docker tag ${ECR_REPO}:$TAG ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-clone:${TAG}
+          docker push ${GCP_ARTIFACT_HOST}/${GCP_PROJECT}/netflix-clone:${TAG}
         fi
       
       # 3. DEPLOY TO EKS (PRIMARY)
