@@ -118,7 +118,9 @@ phases:
       
       # 3. DEPLOY TO EKS (PRIMARY)
       - echo "🚀 Deploying to EKS cluster (AWS Primary)..."
-      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+      #- aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER
+      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER --role-arn arn:aws:iam::266735826560/CodeBuild
+      - kubectl config current-context
       - aws sts get-caller-identity
       - kubectl config view
       - kubectl get nodes
