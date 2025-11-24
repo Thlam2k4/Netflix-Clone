@@ -1,0 +1,48 @@
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netflix-app-deployment
+  labels:
+    app: netflix-app
+spec:
+  # Thiết lập 3 bản sao (Pod) cho khả năng chịu lỗi và hiệu suất
+  replicas: 3
+  selector:
+    matchLabels:
+      app: netflix-app
+  template:
+    metadata:
+      labels:
+        app: netflix-app
+    spec:
+      containers:
+      - name: netflix-container
+        # ⚠️ CHÚ Ý: Đổi tên image thành ECR_REPO của bạn.
+        # Image này sẽ được cập nhật bởi CodeBuild (kubectl set image)
+        image: 266735826560.dkr.ecr.us-east-1.amazonaws.com/devsecops/netflix-app:latest
+        ports:
+        - containerPort: 80 # Thay thế bằng cổng ứng dụng của bạn
+        
+        # Cấu hình Health Check để Kubernetes biết khi nào Pod đã sẵn sàng
+        livenessProbe:
+          httpGet:
+            path: / # ⚠️ Thay thế bằng endpoint kiểm tra sức khỏe thực tế của bạn
+            port: 80
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          timeoutSeconds: 3
+        
+        # Thiết lập giới hạn tài nguyên là một thực hành tốt
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
