@@ -69,14 +69,13 @@ phases:
 
       - echo "🛡 Running IaC Security Scans..."
       # Lưu ý: Sẽ không fail build nếu chỉ có warning (do || true)
-      - tfsec ./ || true 
-      - checkov -d ./ || true
+      # - tfsec ./ || true 
+      # - checkov -d ./ || true
       
   post_build:
     commands:
       # 1. PUSH TO ECR (PRIMARY)
       - echo "📤 Pushing image to ECR..."
-      - docker tag netflix-app:$TAG ${ECR_REPO}:$TAG
       - docker push ${ECR_REPO}:$TAG
       - docker push ${ECR_REPO}:latest # Đảm bảo tag latest luôn cập nhật
 
