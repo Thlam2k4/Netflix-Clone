@@ -21,9 +21,10 @@ phases:
   install:
     commands:
       - echo "🔧 Installing tools and dependencies..."
+      - echo "🔧 Installing tools and dependencies... ${DOCKER_CREDS_ARN}"
+
       # Install jq và unzip
       # - yum update -y && yum install -y jq unzip 
-      - echo "DEBUG: DOCKER_CREDS_ARN value is: ${DOCKER_CREDS_ARN}" # <-- THÊM DÒNG NÀY
       # # Cài đặt Sonar Scanner
       # - echo "Installing Sonar Scanner version ${SONAR_SCANNER_VERSION}..."
       # - curl -fsLR --retry 5 https://github.com/SonarSource/sonar-scanner-cli/releases/download/${SONAR_SCANNER_VERSION}/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip -o scanner.zip
