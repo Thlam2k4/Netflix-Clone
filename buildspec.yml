@@ -60,16 +60,20 @@ phases:
         if [ -n "${DOCKER_SECRET_ID}" ]; then
           echo "🐳 Logging into Docker Hub to bypass pull rate limit..."
           
-          # Lấy chuỗi JSON Secret (ARN/ID được truyền dưới dạng Plaintext)
+          # 1. Lấy chuỗi JSON Secret (ARN/ID được truyền dưới dạng Plaintext)
           DOCKER_CREDS=$(aws secretsmanager get-secret-value --secret-id "${DOCKER_SECRET_ID}" --query SecretString --output text)
           
-        
+          # 2. Trích xuất Username và Password/PAT (Sửa lỗi jq)
+          DOCKER_USER="thanhlam2k4" 
+          DOCKER_PASS=$(echo $DOCKER_CREDS | jq -r '.thanhlam2k4')
+          
+          # 3. DEBUG và Đăng nhập
           echo "DEBUG: Extracted Username: ${DOCKER_USER}"
           
           if [ -n "$DOCKER_PASS" ]; then
             echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
           else
-            echo "FATAL ERROR: Failed to parse DOCKER_PASS. Key JSON trong Secret KHÔNG PHẢI là 'thanhlam2k4'."
+            echo "FATAL ERROR: Failed to parse DOCKER_PASS. Key JSON trong Secret KHÔNG PHẢI là 'thanhlam2k4' hoặc PAT đã hết hạn."
             exit 1 
           fi
         fi
