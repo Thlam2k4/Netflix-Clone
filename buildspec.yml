@@ -32,11 +32,11 @@ phases:
       # - mv /opt/sonar-scanner-${SONAR_SCANNER_VERSION}-linux /opt/sonar-scanner 
       # - export PATH=$PATH:/opt/sonar-scanner/bin
       
-      # # Cài đặt Google Cloud CLI (gcloud) - Dành cho AL2
-      # - echo "Installing Google Cloud CLI..."
-      # - curl -sSL https://sdk.cloud.google.com | bash
-      # - export PATH=$PATH:/root/google-cloud-sdk/bin
-      # - gcloud version
+      # Cài đặt Google Cloud CLI (gcloud) - Dành cho AL2
+      - echo "Installing Google Cloud CLI..."
+      - curl -sSL https://sdk.cloud.google.com | bash
+      - export PATH=$PATH:/root/google-cloud-sdk/bin
+      - gcloud version
       
       # # Install Trivy client
       # - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
@@ -70,9 +70,14 @@ phases:
           echo "$DOCKER_PASS" | docker login --username "$DOCKER_USER" --password-stdin
         fi
       # 3. XÁC THỰC VÀ ĐĂNG NHẬP DOCKER VỚI GCP ARTIFACT REGISTRY
-      # - |
-      #   echo "DEBUG: GCP_SA_KEY_ARN value is: '${GCP_SA_KEY_ARN}'"
-      #   if [ -n "${GCP_SA_KEY_ARN}" ]; then GCP_SA_KEY_JSON=$(aws secretsmanager get-secret-value --secret-id "${GCP_SA_KEY_ARN}" --query SecretString --output text); printf '%s' "$GCP_SA_KEY_JSON" > /tmp/gcpkey.json; gcloud auth activate-service-account --key-file=/tmp/gcpkey.json; gcloud auth configure-docker $GCP_ARTIFACT_HOST --quiet; fi
+      - |
+        if [ -n "$GCP_SA_KEY_ARN" ]; then
+          aws secretsmanager get-secret-value --secret-id "$GCP_SA_KEY_ARN" --query SecretString --output text > /tmp/gcpkey.json \
+          && gcloud auth activate-service-account --key-file=/tmp/gcpkey.json \
+          && gcloud auth configure-docker $GCP_ARTIFACT_HOST --quiet;
+        else
+          echo "GCP_SA_KEY_ARN is empty, skipping GCP auth";
+        fi
 
   build:
     commands:
