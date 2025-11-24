@@ -56,19 +56,19 @@ phases:
 
       # 2. ĐĂNG NHẬP DOCKER HUB (Sử dụng Secrets Manager)
       - |
-      echo "DEBUG: DOCKER_CREDS_ARN value is: '${DOCKER_CREDS_ARN}'"
-      if [ -n "${DOCKER_CREDS_ARN}" ]; then
-        echo "🐳 Logging into Docker Hub..."
-        DOCKER_CREDS=$(aws secretsmanager get-secret-value --secret-id "${DOCKER_CREDS_ARN}" --query SecretString --output text)
-        DOCKER_USER="thanhlam2k4"
-        DOCKER_PASS=$(echo "$DOCKER_CREDS" | jq -r '.thanhlam2k4')
-        if [ -z "$DOCKER_PASS" ]; then
-          echo "❌ ERROR: Failed to parse Docker PAT from secret"
-          exit 1
+        echo "DEBUG: DOCKER_CREDS_ARN value is: '${DOCKER_CREDS_ARN}'"
+        if [ -n "${DOCKER_CREDS_ARN}" ]; then
+          echo "🐳 Logging into Docker Hub..."
+          DOCKER_CREDS=$(aws secretsmanager get-secret-value --secret-id "${DOCKER_CREDS_ARN}" --query SecretString --output text)
+          DOCKER_USER="thanhlam2k4"
+          DOCKER_PASS=$(echo "$DOCKER_CREDS" | jq -r '.thanhlam2k4')
+          if [ -z "$DOCKER_PASS" ]; then
+            echo "❌ ERROR: Failed to parse Docker PAT from secret"
+            exit 1
+          fi
+          echo "🔐 Logging into Docker Hub as: $DOCKER_USER"
+          echo "$DOCKER_PASS" | docker login --username "$DOCKER_USER" --password-stdin
         fi
-        echo "🔐 Logging into Docker Hub as: $DOCKER_USER"
-        echo "$DOCKER_PASS" | docker login --username "$DOCKER_USER" --password-stdin
-      fi
       # 3. XÁC THỰC VÀ ĐĂNG NHẬP DOCKER VỚI GCP ARTIFACT REGISTRY
       # - |
       #   echo "DEBUG: GCP_SA_KEY_ARN value is: '${GCP_SA_KEY_ARN}'"
