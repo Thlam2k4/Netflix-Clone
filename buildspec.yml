@@ -60,23 +60,26 @@ phases:
         if [ -n "${DOCKER_SECRET_ID}" ]; then
           echo "🐳 Logging into Docker Hub to bypass pull rate limit..."
           
-          # 1. Lấy chuỗi JSON Secret (ARN/ID được truyền dưới dạng Plaintext)
-          DOCKER_CREDS=$(aws secretsmanager get-secret-value --secret-id "${DOCKER_SECRET_ID}" --query SecretString --output text)
-          
-          # 2. Trích xuất Username và Password/PAT (Sửa lỗi jq)
-          DOCKER_USER="thanhlam2k4" 
-          DOCKER_PASS=$(echo $DOCKER_CREDS | jq -r '.thanhlam2k4')
-          
-          # 3. DEBUG và Đăng nhập
-          echo "DEBUG: Extracted Username: ${DOCKER_USER}"
-          
-          if [ -n "$DOCKER_PASS" ]; then
-            echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
-          else
-            echo "FATAL ERROR: Failed to parse DOCKER_PASS. Key JSON trong Secret KHÔNG PHẢI là 'thanhlam2k4' hoặc PAT đã hết hạn."
-            exit 1 
+          # Lấy JSON Secret từ AWS Secrets Manager
+          DOCKER_CREDS=$(aws secretsmanager get-secret-value \
+            --secret-id "${DOCKER_SECRET_ID}" \
+            --query SecretString \
+            --output text)
+
+          # Parse username & password từ JSON
+          DOCKER_USER=$(echo "$DOCKER_CREDS" | jq -r '.username')
+          DOCKER_PASS=$(echo "$DOCKER_CREDS" | jq -r '.password')
+
+          # Validate
+          if [ -z "$DOCKER_USER" ] || [ -z "$DOCKER_PASS" ]; then
+            echo "❌ ERROR: Secret JSON MUST be: {\"username\":\"...\",\"password\":\"...\"}"
+            exit 1
           fi
+
+          echo "🔐 Logging into Docker Hub as: $DOCKER_USER"
+          echo "$DOCKER_PASS" | docker login --username "$DOCKER_USER" --password-stdin
         fi
+
       # 3. XÁC THỰC VÀ ĐĂNG NHẬP DOCKER VỚI GCP ARTIFACT REGISTRY
       # - |
       #   echo "DEBUG: GCP_SA_KEY_ARN value is: '${GCP_SA_KEY_ARN}'"
