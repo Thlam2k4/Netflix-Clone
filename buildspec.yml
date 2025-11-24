@@ -110,7 +110,7 @@ phases:
       - kubectl rollout status deployment/netflix-app -n $K8S_NAMESPACE
 
       # 4. DEPLOY TO GKE (HOT STANDBY)
-     - |
+      - |
         if [ -n "$GCP_SA_KEY_ARN" ]; then
           echo "Deploying to GKE cluster (GCP Hot Standby)..."
           # Lấy thông tin xác thực cho kubectl
