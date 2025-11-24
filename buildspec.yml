@@ -56,29 +56,13 @@ phases:
 
       # 2. ĐĂNG NHẬP DOCKER HUB (Sử dụng Secrets Manager)
       - |
-        if [ -n "${DOCKER_CREDS_ARN}" ]; then
-          echo "🐳 Logging into Docker Hub to bypass pull rate limit..."
-          # Lấy chuỗi JSON chứa username và password từ Secret
-          DOCKER_CREDS=$(aws secretsmanager get-secret-value --secret-id ${DOCKER_CREDS_ARN} --query SecretString --output text)
-          DOCKER_USER=$(echo $DOCKER_CREDS | jq -r '.username')
-          DOCKER_PASS=$(echo $DOCKER_CREDS | jq -r '.password')
-          echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
-        fi
+        echo "DEBUG: DOCKER_CREDS_ARN value is: '${DOCKER_CREDS_ARN}'"
+        if [ -n "${DOCKER_CREDS_ARN}" ]; then DOCKER_CREDS=$(aws secretsmanager get-secret-value --secret-id "${DOCKER_CREDS_ARN}" --query SecretString --output text); DOCKER_USER=$(echo $DOCKER_CREDS | jq -r '.username'); DOCKER_PASS=$(echo $DOCKER_CREDS | jq -r '.password'); if [ -n "$DOCKER_PASS" ]; then echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin; else echo "ERROR: Failed to parse DOCKER_PASS." && exit 1; fi; else echo "FATAL ERROR: DOCKER_CREDS_ARN is EMPTY. Re-check CodeBuild UI." && exit 1; fi
 
       # 3. XÁC THỰC VÀ ĐĂNG NHẬP DOCKER VỚI GCP ARTIFACT REGISTRY
       - |
-        if [ -n "${GCP_SA_KEY_ARN}" ]; then
-          echo "Activating GCP Service Account and configuring Docker for Artifact Registry..."
-          # Lấy chuỗi JSON Key từ Secrets Manager
-          GCP_SA_KEY_JSON=$(aws secretsmanager get-secret-value --secret-id ${GCP_SA_KEY_ARN} --query SecretString --output text)
-          
-          # Lưu chuỗi JSON Key vào file tạm
-          printf '%s' "$GCP_SA_KEY_JSON" > /tmp/gcpkey.json 
-          # Kích hoạt Service Account
-          gcloud auth activate-service-account --key-file=/tmp/gcpkey.json
-          # Cấu hình Docker để sử dụng Artifact Registry
-          gcloud auth configure-docker $GCP_ARTIFACT_HOST --quiet
-        fi
+        echo "DEBUG: GCP_SA_KEY_ARN value is: '${GCP_SA_KEY_ARN}'"
+        if [ -n "${GCP_SA_KEY_ARN}" ]; then GCP_SA_KEY_JSON=$(aws secretsmanager get-secret-value --secret-id "${GCP_SA_KEY_ARN}" --query SecretString --output text); printf '%s' "$GCP_SA_KEY_JSON" > /tmp/gcpkey.json; gcloud auth activate-service-account --key-file=/tmp/gcpkey.json; gcloud auth configure-docker $GCP_ARTIFACT_HOST --quiet; fi
 
   build:
     commands:
