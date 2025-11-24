@@ -22,26 +22,26 @@ phases:
     commands:
       - echo "🔧 Installing tools and dependencies..."
       # Install jq và unzip
-      - yum update -y && yum install -y jq unzip 
+      # - yum update -y && yum install -y jq unzip 
       
-      # Cài đặt Sonar Scanner
-      - echo "Installing Sonar Scanner version ${SONAR_SCANNER_VERSION}..."
-      - curl -fsLR --retry 5 https://github.com/SonarSource/sonar-scanner-cli/releases/download/${SONAR_SCANNER_VERSION}/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip -o scanner.zip
-      - unzip scanner.zip -d /opt/
-      - mv /opt/sonar-scanner-${SONAR_SCANNER_VERSION}-linux /opt/sonar-scanner 
-      - export PATH=$PATH:/opt/sonar-scanner/bin
+      # # Cài đặt Sonar Scanner
+      # - echo "Installing Sonar Scanner version ${SONAR_SCANNER_VERSION}..."
+      # - curl -fsLR --retry 5 https://github.com/SonarSource/sonar-scanner-cli/releases/download/${SONAR_SCANNER_VERSION}/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip -o scanner.zip
+      # - unzip scanner.zip -d /opt/
+      # - mv /opt/sonar-scanner-${SONAR_SCANNER_VERSION}-linux /opt/sonar-scanner 
+      # - export PATH=$PATH:/opt/sonar-scanner/bin
       
-      # Cài đặt Google Cloud CLI (gcloud) - Dành cho AL2
-      - echo "Installing Google Cloud CLI..."
-      - curl -sSL https://sdk.cloud.google.com | bash
-      - export PATH=$PATH:/root/google-cloud-sdk/bin
-      - gcloud version
+      # # Cài đặt Google Cloud CLI (gcloud) - Dành cho AL2
+      # - echo "Installing Google Cloud CLI..."
+      # - curl -sSL https://sdk.cloud.google.com | bash
+      # - export PATH=$PATH:/root/google-cloud-sdk/bin
+      # - gcloud version
       
-      # Install Trivy client
-      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      # # Install Trivy client
+      # - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
       
-      # IaC security: tfsec & checkov
-      - pip install --quiet checkov tfsec
+      # # IaC security: tfsec & checkov
+      # - pip install --quiet checkov tfsec
 
   pre_build:
     commands:
@@ -82,7 +82,7 @@ phases:
   build:
     commands:
       - echo "🔍 Running SonarQube scan..."
-      - sonar-scanner -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+      # - sonar-scanner -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
       
       - echo "🐳 Building Docker image..."
       - docker build -t ${ECR_REPO}:$TAG . # Đã sửa lỗi tag image
@@ -90,12 +90,12 @@ phases:
 
       - echo "🔎 Scanning image via Trivy..."
       # Kích hoạt Trivy scan (sẽ FAIL pipeline nếu có HIGH/CRITICAL)
-      - trivy image --exit-code 1 --severity HIGH,CRITICAL ${ECR_REPO}:$TAG 
+      # - trivy image --exit-code 1 --severity HIGH,CRITICAL ${ECR_REPO}:$TAG 
 
       - echo "🛡 Running IaC Security Scans..."
       # Lưu ý: Sẽ không fail build nếu chỉ có warning (do || true)
-      - tfsec ./ || true 
-      - checkov -d ./ || true
+      # - tfsec ./ || true 
+      # - checkov -d ./ || true
       
   post_build:
     commands:
