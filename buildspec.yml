@@ -74,7 +74,17 @@ phases:
       
       # --- IaC security: tfsec & checkov ---
       - echo "Installing IaC security tools (checkov, tfsec)..."
-      - pip install --quiet checkov tfsec
+      
+      # Cài đặt checkov bằng pip (vì nó là gói Python)
+      - pip install --quiet checkov 
+      
+      # Cài đặt tfsec bằng tập lệnh cài đặt (vì nó là binary Go)
+      - curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/install/install.sh | bash
+      - chmod +x tfsec
+      - mv tfsec /usr/local/bin/
+      
+      - checkov --version # Kiểm tra cài đặt checkov
+      - tfsec --version # Kiểm tra cài đặt tfsec
 
   pre_build:
     commands:
