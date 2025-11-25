@@ -7,8 +7,6 @@ env:
     # SONAR_HOST_URL: "http://34.232.189.92:9000"
     SONAR_PROJECT_KEY: "Netflix-app"
     # TRIVY_SERVER: "http://34.232.189.92:4954"
-    SONAR_SCANNER_VERSION: "5.0.1.3007"
-    
     # CÁC BIẾN CẦN THIẾT CHO GCP (Phải được thiết lập trong CodeBuild UI)
     GCP_REGION: "us-central1" # Đã sửa để khớp với Artifact Registry
     # GCP_ARTIFACT_HOST: "us-east1-docker.pkg.dev"
@@ -39,7 +37,7 @@ phases:
       - echo "Installing Sonar Scanner version ${SONAR_SCANNER_VERSION} from Binary Distribution..."
       - # URL Binary Distribution chính thức của SonarSource
       - # Lưu ý: Phiên bản cho Linux/macOS/Windows thường có JRE đi kèm
-      - curl -fsLR --retry 5 https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}.zip -o scanner.zip
+      - curl -fsLR --retry 5 https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006.zip -o scanner.zip
       - # Giải nén vào thư mục /opt/
       - unzip -q scanner.zip -d /opt/
       - # Đổi tên thư mục giải nén (Cần điều chỉnh tên thư mục sau khi giải nén)
