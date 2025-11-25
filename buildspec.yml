@@ -3,18 +3,18 @@ env:
   variables:
     AWS_REGION: "us-east-1"
     EKS_CLUSTER: "netflix-app-eks"
-    ECR_REPO: "266735826560.dkr.ecr.us-east-1.amazonaws.com/devsecops/netflix-app"
-    SONAR_HOST_URL: "http://34.232.189.92:9000"
+    # ECR_REPO: "266735826560.dkr.ecr.us-east-1.amazonaws.com/devsecops/netflix-app"
+    # SONAR_HOST_URL: "http://34.232.189.92:9000"
     SONAR_PROJECT_KEY: "Netflix-app"
-    TRIVY_SERVER: "http://34.232.189.92:4954"
+    # TRIVY_SERVER: "http://34.232.189.92:4954"
     SONAR_SCANNER_VERSION: "5.0.1.3000"
     
     # CÁC BIẾN CẦN THIẾT CHO GCP (Phải được thiết lập trong CodeBuild UI)
     GCP_REGION: "us-central1" # Đã sửa để khớp với Artifact Registry
-    GCP_ARTIFACT_HOST: "us-east1-docker.pkg.dev"
-    GKE_CLUSTER: "netflix-app-gke"
+    # GCP_ARTIFACT_HOST: "us-east1-docker.pkg.dev"
+    # GKE_CLUSTER: "netflix-app-gke"
     K8S_NAMESPACE: "default"
-    GCP_PROJECT: "calm-cairn-455503-d0"
+    # GCP_PROJECT: "calm-cairn-455503-d0"
     # Cần set GCP_PROJECT (PLAIN TEXT)
     # Cần set DOCKER_CREDS_ARN & GCP_SA_KEY_ARN (SECRETS MANAGER)
 
