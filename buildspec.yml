@@ -47,7 +47,7 @@ phases:
       - curl -sSL https://sdk.cloud.google.com | bash
       - export PATH=$PATH:/root/google-cloud-sdk/bin
       - gcloud version
-      
+      - gcloud components install gke-gcloud-auth-plugin
       # # Install Trivy client
       # - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
       
