@@ -42,7 +42,7 @@ phases:
       - unzip -q scanner.zip -d /opt/
       - # Đổi tên thư mục giải nén (Cần điều chỉnh tên thư mục sau khi giải nén)
       - # Tên thư mục sau khi giải nén từ SonarSource thường là sonar-scanner-cli-${SONAR_SCANNER_VERSION}
-      - mv /opt/sonar-scanner-cli-5.0.1.3006 /opt/sonar-scanner
+      - mv scanner.zip /opt/sonar-scanner
       - # Xóa tệp zip
       - rm scanner.zip
       - # Thêm đường dẫn bin vào biến môi trường PATH
