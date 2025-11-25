@@ -26,10 +26,10 @@ phases:
       - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
       - chmod +x kubectl
       - mv kubectl /usr/local/bin/
-      - echo Installing gke-gcloud-auth-plugin
-      - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/gke-gcloud-auth-plugin"
-      - chmod +x gke-gcloud-auth-plugin
-      - mv gke-gcloud-auth-plugin /usr/local/bin/
+      # - echo Installing gke-gcloud-auth-plugin
+      # - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/gke-gcloud-auth-plugin"
+      # - chmod +x gke-gcloud-auth-plugin
+      # - mv gke-gcloud-auth-plugin /usr/local/bin/
       # Install jq và unzip
       - apt-get update -y
       - apt-get install -y curl unzip jq python3-pip
