@@ -2,7 +2,7 @@ version: 0.2
 env:
   variables:
     AWS_REGION: "us-east-1"
-    EKS_CLUSTER: "netflix-app-eks"
+    EKS_CLUSTER: "netflix-eks"
     # ECR_REPO: "266735826560.dkr.ecr.us-east-1.amazonaws.com/devsecops/netflix-app"
     # SONAR_HOST_URL: "http://34.232.189.92:9000"
     SONAR_PROJECT_KEY: "Netflix-app"
