@@ -34,32 +34,36 @@ phases:
       - apt-get update -y
       - apt-get install -y curl unzip jq python3-pip
       # # Cài đặt Sonar Scanner
-      - echo "Installing Sonar Scanner version ${SONAR_SCANNER_VERSION} from Binary Distribution..."
-      - # URL Binary Distribution chính thức của SonarSource
-      - # Lưu ý: Phiên bản cho Linux/macOS/Windows thường có JRE đi kèm
+      # --- Cài đặt Sonar Scanner CLI ---
+      - echo "Installing Sonar Scanner version 5.0.1.3006..."
+      # Tải tệp zip. Dùng -o để đảm bảo lưu dưới tên scanner.zip trong thư mục hiện tại.
       - curl -fsLR --retry 5 https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006.zip -o scanner.zip
       - # Giải nén vào thư mục /opt/
       - unzip -q scanner.zip -d /opt/
-      - # Đổi tên thư mục giải nén (Cần điều chỉnh tên thư mục sau khi giải nén)
-      - # Tên thư mục sau khi giải nén từ SonarSource thường là sonar-scanner-cli-${SONAR_SCANNER_VERSION}
-      - mv scanner.zip /opt/sonar-scanner
-      - # Xóa tệp zip
+      - # Đổi tên thư mục đã giải nén (từ /opt/sonar-scanner-cli-5.0.1.3006 thành /opt/sonar-scanner)
+      - mv /opt/sonar-scanner-cli-5.0.1.3006 /opt/sonar-scanner
+      - # Xóa tệp zip trong thư mục hiện tại
       - rm scanner.zip
       - # Thêm đường dẫn bin vào biến môi trường PATH
       - export PATH=$PATH:/opt/sonar-scanner/bin
       - # Kiểm tra phiên bản
       - /opt/sonar-scanner/bin/sonar-scanner -v
       
-      # Cài đặt Google Cloud CLI (gcloud) - Dành cho AL2
+      # --- Cài đặt Google Cloud CLI (gcloud) - Dành cho AL2 ---
       - echo "Installing Google Cloud CLI..."
       - curl -sSL https://sdk.cloud.google.com | bash
+      - # PATH của gcloud được thêm vào sau khi cài đặt
       - export PATH=$PATH:/root/google-cloud-sdk/bin
       - gcloud version
-      - gcloud components install gke-gcloud-auth-plugin
-      # # Install Trivy client
-      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - gcloud components install gke-gcloud-auth-plugin --quiet
       
-      # IaC security: tfsec & checkov
+      # --- Install Trivy client ---
+      - echo "Installing Trivy client..."
+      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - /usr/local/bin/trivy --version # Kiểm tra cài đặt
+      
+      # --- IaC security: tfsec & checkov ---
+      - echo "Installing IaC security tools (checkov, tfsec)..."
       - pip install --quiet checkov tfsec
 
   pre_build:
