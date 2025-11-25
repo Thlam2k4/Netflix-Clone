@@ -38,9 +38,10 @@ phases:
       - echo "Installing Sonar Scanner version 5.0.1.3006..."
       # Tải tệp zip. Dùng -o để đảm bảo lưu dưới tên scanner.zip trong thư mục hiện tại.
       - curl -fsLR --retry 5 https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006.zip -o scanner.zip
-      - ls /opt/
+      
       - unzip -q scanner.zip -d /opt/
       - # Đổi tên thư mục đã giải nén (từ /opt/sonar-scanner-cli-5.0.1.3006 thành /opt/sonar-scanner)
+      - ls /opt/
       - mv /opt/scanner /opt/sonar-scanner
       - # Xóa tệp zip trong thư mục hiện tại
       - rm scanner.zip
