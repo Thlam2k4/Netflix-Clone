@@ -7,7 +7,7 @@ env:
     # SONAR_HOST_URL: "http://34.232.189.92:9000"
     SONAR_PROJECT_KEY: "Netflix-app"
     # TRIVY_SERVER: "http://34.232.189.92:4954"
-    SONAR_SCANNER_VERSION: "5.0.1.3000"
+    SONAR_SCANNER_VERSION: "5.0.1.3007"
     
     # CÁC BIẾN CẦN THIẾT CHO GCP (Phải được thiết lập trong CodeBuild UI)
     GCP_REGION: "us-central1" # Đã sửa để khớp với Artifact Registry
