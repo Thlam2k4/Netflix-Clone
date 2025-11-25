@@ -10,7 +10,7 @@ env:
     SONAR_SCANNER_VERSION: "5.0.1.3000"
     
     # CÁC BIẾN CẦN THIẾT CHO GCP (Phải được thiết lập trong CodeBuild UI)
-    GCP_REGION: "us-east1" # Đã sửa để khớp với Artifact Registry
+    GCP_REGION: "us-central1" # Đã sửa để khớp với Artifact Registry
     GCP_ARTIFACT_HOST: "us-east1-docker.pkg.dev"
     GKE_CLUSTER: "netflix-app-gke"
     K8S_NAMESPACE: "default"
