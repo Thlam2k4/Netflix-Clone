@@ -67,28 +67,6 @@ phases:
       - gcloud version
       - gcloud components install gke-gcloud-auth-plugin --quiet
       
-      # --- Install Trivy client ---
-      - echo "Installing Trivy client..."
-      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-      - /usr/local/bin/trivy --version # Kiểm tra cài đặt
-      
-      # --- IaC security: tfsec & checkov ---
-      - echo "Installing IaC security tools (checkov, tfsec)..."
-      
-      # Cài đặt checkov bằng pip (vì nó là gói Python)
-      - pip install --quiet checkov 
-      
-      # Cài đặt tfsec bằng tập lệnh cài đặt (vì nó là binary Go)
-      - TFSEC_VERSION="v1.28.1"
-      - TFSEC_URL="https://github.com/aquasecurity/tfsec/releases/download/${TFSEC_VERSION}/tfsec-linux-amd64"
-      - echo "Downloading tfsec from ${TFSEC_URL}"
-      - curl -L -o tfsec $TFSEC_URL
-      - chmod +x tfsec
-      - mv tfsec /usr/local/bin/
-      
-      - checkov --version # Kiểm tra cài đặt checkov
-      - tfsec --version # Kiểm tra cài đặt tfsec
-
   pre_build:
     commands:
       - echo "🔐 Starting pre-build tasks..."
