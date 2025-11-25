@@ -79,7 +79,10 @@ phases:
       - pip install --quiet checkov 
       
       # Cài đặt tfsec bằng tập lệnh cài đặt (vì nó là binary Go)
-      - curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/install/install.sh | bash
+      - TFSEC_VERSION="v1.28.1"
+      - TFSEC_URL="https://github.com/aquasecurity/tfsec/releases/download/${TFSEC_VERSION}/tfsec-linux-amd64"
+      - echo "Downloading tfsec from ${TFSEC_URL}"
+      - curl -L -o tfsec $TFSEC_URL
       - chmod +x tfsec
       - mv tfsec /usr/local/bin/
       
