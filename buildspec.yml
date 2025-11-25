@@ -34,7 +34,7 @@ phases:
       - chmod +x gke-gcloud-auth-plugin
       - mv gke-gcloud-auth-plugin /usr/local/bin/
       # Install jq và unzip
-      - yum update -y && yum install -y jq unzip 
+      - dnf install -y jq unzip curl unzip python3-pip zip
       # # Cài đặt Sonar Scanner
       - echo "Installing Sonar Scanner version ${SONAR_SCANNER_VERSION}..."
       - curl -fsLR --retry 5 https://github.com/SonarSource/sonar-scanner-cli/releases/download/${SONAR_SCANNER_VERSION}/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip -o scanner.zip
