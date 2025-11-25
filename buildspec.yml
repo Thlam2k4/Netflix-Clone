@@ -36,7 +36,6 @@ phases:
       - apt-get install -y openjdk-17-jdk unzip curl
       
       - export JAVA_17_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
-      - echo "Setting JAVA_HOME to Java 17: ${JAVA_17_HOME}"
       - export JAVA_HOME=$JAVA_17_HOME
       - update-alternatives --set java $JAVA_HOME/bin/java
       
