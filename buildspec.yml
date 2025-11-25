@@ -33,6 +33,9 @@ phases:
       # Install jq và unzip
       - apt-get update -y
       - apt-get install -y curl unzip jq python3-pip
+      - apt-get install -y openjdk-17-jdk unzip curl
+      - java -version
+
       # # Cài đặt Sonar Scanner
       # --- Cài đặt Sonar Scanner CLI ---
       - echo "Installing Sonar Scanner version 5.0.1.3006..."
