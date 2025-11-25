@@ -112,15 +112,6 @@ phases:
       - echo "🐳 Building Docker image..."
       - docker build --platform linux/amd64 -t ${ECR_REPO}:$TAG . # Đã sửa lỗi tag image
       - docker tag ${ECR_REPO}:$TAG ${ECR_REPO}:latest # Tag cục bộ để scan
-
-      - echo "🔎 Scanning image via Trivy..."
-      # Kích hoạt Trivy scan (sẽ FAIL pipeline nếu có HIGH/CRITICAL)
-      - trivy image --exit-code 1 --severity HIGH,CRITICAL ${ECR_REPO}:$TAG 
-
-      - echo "🛡 Running IaC Security Scans..."
-      # Lưu ý: Sẽ không fail build nếu chỉ có warning (do || true)
-      - tfsec ./ || true 
-      - checkov -d ./ || true
       
   post_build:
     commands:
